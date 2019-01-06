@@ -1,0 +1,19 @@
+spring:
+  ## configuration for using jdbc datasource
+  datasource:
+    username: root
+    password: ZengLuo#20190102
+    url: jdbc:mysql://18.222.196.38:3306/sporch
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    initialization-mode: always
+    schema:
+    - classpath:/sql/init.sql
+
+
+  ## configuration for using jpa
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties: {}
+
