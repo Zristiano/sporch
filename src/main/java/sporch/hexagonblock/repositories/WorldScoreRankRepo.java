@@ -5,19 +5,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
-import sporch.hexagonblock.model.ScoreRecord;
+import sporch.hexagonblock.model.WorldScoreRecord;
 
-public interface ScoreRankRepo extends JpaRepository<ScoreRecord,Integer> {
+public interface WorldScoreRankRepo extends JpaRepository<WorldScoreRecord,Integer> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE ScoreRecord w SET w.score = :score, w.ts = :ts WHERE id=:id")
+    @Query("UPDATE WorldScoreRecord w SET w.score = :score, w.ts = :ts WHERE id=:id")
     int updateScore(@Param("id") Integer id,
                     @Param("score") Integer score,
                     @Param("ts") Integer ts);
 
-    ScoreRecord findByUsernameAndPlatform(String username, Integer platform);
+    WorldScoreRecord findByUsernameAndPlatform(String username, Integer platform);
 
-    @Query("SELECT count (id) + 1 as rank from ScoreRecord where score>:score")
+    @Query("SELECT count (id) + 1 as rank from WorldScoreRecord where score>:score")
     int rankInTheWorld(@Param("score") Integer score);
 }

@@ -13,9 +13,9 @@ import sporch.hexagonblock.data.RestfulResult;
 import sporch.hexagonblock.data.UserPlatform;
 import sporch.hexagonblock.data.WorldRank;
 import sporch.hexagonblock.model.IndividualScoreRecord;
-import sporch.hexagonblock.model.ScoreRecord;
+import sporch.hexagonblock.model.WorldScoreRecord;
 import sporch.hexagonblock.repositories.IndividualScoreRepo;
-import sporch.hexagonblock.repositories.ScoreRankRepo;
+import sporch.hexagonblock.repositories.WorldScoreRankRepo;
 import sporch.hexagonblock.utils.MethodUtil;
 
 import javax.sql.DataSource;
@@ -41,7 +41,7 @@ public class RankController {
     private DataSource dataSource;
 
     @Autowired
-    private ScoreRankRepo scoreRankRepo;
+    private WorldScoreRankRepo worldScoreRankRepo;
 
     @Autowired
     private IndividualScoreRepo individualScoreRepo;
@@ -88,10 +88,10 @@ public class RankController {
     public RestfulResult<WorldRank> getRankList(@RequestParam(value="username",required=false)String username,
                                                 @RequestParam(value="platform",required=false)Integer platform){
         if (MethodUtil.isEmpty(username)){
-            WorldRank<ScoreRecord> worldRank = new WorldRank<>();
+            WorldRank<WorldScoreRecord> worldRank = new WorldRank<>();
             // if there is no username,
             // return the the top 20 highest score records from the world score records
-            worldRank.setRankList(getRankList(0,50,null,scoreRankRepo));
+            worldRank.setRankList(getRankList(0,50,null, worldScoreRankRepo));
             return new RestfulResult<>(0,"success",worldRank);
         }else {
             WorldRank<IndividualScoreRecord> worldRank = new WorldRank<>();
@@ -112,13 +112,13 @@ public class RankController {
     }
 
     @RequestMapping(path = "/score", method = RequestMethod.POST )
-    public RestfulResult<Object> updateScore(@RequestBody String body) {
+    public RestfulResult<Object> uploadScore(@RequestBody String body) {
         try {
             JsonElement jsonElement = jsonParser.parse(body);
             JsonObject json = jsonElement.getAsJsonObject();
             String username = json.get("username").getAsString();
             Integer score = json.get("score").getAsInt();
-            ScoreRecord scoreRecord = new ScoreRecord();
+            WorldScoreRecord scoreRecord = new WorldScoreRecord();
             scoreRecord.setUsername(username);
             scoreRecord.setScore(score);
             if (json.get("platform") != null) {
@@ -131,23 +131,22 @@ public class RankController {
                 scoreRecord.setAvatar(json.get("avatar").getAsString());
             }
             scoreRecord.setTs((int) (System.currentTimeMillis() / 1000));
-            updateIndividualRecord(scoreRecord);
-            ScoreRecord existRecord = scoreRankRepo.findByUsernameAndPlatform(scoreRecord.getUsername(), scoreRecord.getPlatform());
+            WorldScoreRecord existRecord = worldScoreRankRepo.findByUsernameAndPlatform(scoreRecord.getUsername(), scoreRecord.getPlatform());
             // check if the user exists in the world rank table
             if (existRecord != null) {
                 // if current score is better than before, update it.
                 if (existRecord.getScore() <= scoreRecord.getScore()) {
-                    scoreRankRepo.updateScore(existRecord.getId(), scoreRecord.getScore(), scoreRecord.getTs());
+                    worldScoreRankRepo.updateScore(existRecord.getId(), scoreRecord.getScore(), scoreRecord.getTs());
                 }
             } else {
                 // insert a new score record
-                scoreRecord = scoreRankRepo.save(scoreRecord);
+                scoreRecord = worldScoreRankRepo.save(scoreRecord);
             }
             // rank of current score in the world score records
-            int rank = scoreRankRepo.rankInTheWorld(score);
-            WorldRank<ScoreRecord> worldRank = new WorldRank<>();
+            int rank = worldScoreRankRepo.rankInTheWorld(score);
+            WorldRank<WorldScoreRecord> worldRank = new WorldRank<>();
             // get the the top 20 highest score records
-            worldRank.setRankList(getRankList(0, 50, null, scoreRankRepo));
+            worldRank.setRankList(getRankList(0, 50, null, worldScoreRankRepo));
             worldRank.setIndividualRank(rank);
 
             updateIndividualRecord(scoreRecord);
@@ -163,7 +162,7 @@ public class RankController {
      * update the individual score table
      * @param s score record
      */
-    private void updateIndividualRecord(ScoreRecord s){
+    private void updateIndividualRecord(WorldScoreRecord s){
         IndividualScoreRecord record = new IndividualScoreRecord(s);
         List<IndividualScoreRecord> records = individualScoreRepo.findAllByUsernameAndPlatformOrderByScore(record.getUsername(),record.getPlatform());
         // if number of individual records is less than MAX_INDIVIDUAL_COUNT, insert a new record,
@@ -171,7 +170,7 @@ public class RankController {
             individualScoreRepo.save(record);
         }else {
             //update the minimum score records
-            individualScoreRepo.updateScore(record.getScore(),records.get(records.size()-1).getId(),record.getTs());
+            individualScoreRepo.updateScore(record.getScore(),records.get(0).getId(),record.getTs());
         }
     }
 
@@ -182,8 +181,8 @@ public class RankController {
      * @param example used to narrow down the searching scope
      * @return list of world score records in descending order
      */
-    private <T extends ScoreRecord> List<T> getRankList(int page, int size, Example<T> example, JpaRepository<T,Integer> repo){
-        Sort sort = Sort.by(Sort.Order.desc(T.COL_SCORE));
+    private <T> List<T> getRankList(int page, int size, Example<T> example, JpaRepository<T,Integer> repo){
+        Sort sort = Sort.by(Sort.Order.desc(IndividualScoreRecord.COL_SCORE));
         Pageable pageable = PageRequest.of(page,size,sort);
         Page<T> pageItem;
         if (example==null){

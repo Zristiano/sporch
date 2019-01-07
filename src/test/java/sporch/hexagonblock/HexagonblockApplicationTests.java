@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import sporch.hexagonblock.controller.RankController;
-import sporch.hexagonblock.repositories.ScoreRankRepo;
+import sporch.hexagonblock.repositories.WorldScoreRankRepo;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -52,10 +52,10 @@ public class HexagonblockApplicationTests {
     }
 
     @Autowired
-    ScoreRankRepo scoreRankRepo;
+    WorldScoreRankRepo worldScoreRankRepo;
     @Test
     public void testRank(){
-        int rank = scoreRankRepo.rankInTheWorld(56000);
+        int rank = worldScoreRankRepo.rankInTheWorld(56000);
         System.out.println(rank);
     }
 }

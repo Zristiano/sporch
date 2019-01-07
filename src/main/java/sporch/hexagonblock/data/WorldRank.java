@@ -1,10 +1,8 @@
 package sporch.hexagonblock.data;
 
-import sporch.hexagonblock.model.ScoreRecord;
-
 import java.util.List;
 
-public class WorldRank<T extends ScoreRecord> {
+public class WorldRank<T> {
     List<T> rankList;
     int individualRank = -1;
 

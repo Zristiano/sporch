@@ -2,14 +2,22 @@ package sporch.hexagonblock.model;
 
 import javax.persistence.*;
 
-@Entity // inform JPA this class reflects table in database
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public class ScoreRecord {
+@Entity
+@Table(name = "world_score_rank")
+public class WorldScoreRecord {
 
-    public static final String COL_SCORE = "score";
+    public WorldScoreRecord(){}
 
-    @Id  // primary key
-    @GeneratedValue(strategy = GenerationType.TABLE)  // auto_increment
+    public WorldScoreRecord(IndividualScoreRecord s){
+        setUsername(s.getUsername());
+        setTs(s.getTs());
+        setScore(s.getScore());
+        setPlatform(s.getPlatform());
+        setAvatar(s.getAvatar());
+    }
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(length = 20, nullable = false)
@@ -20,7 +28,7 @@ public class ScoreRecord {
      */
     private Integer platform;
 
-    @Column(name = COL_SCORE, nullable = false)
+    @Column(name = IndividualScoreRecord.COL_SCORE, nullable = false)
     private Integer score;
 
     @Column (length = 2083)
@@ -33,13 +41,6 @@ public class ScoreRecord {
         avatar = "https://res.cloudinary.com/hi3jyavvz/image/upload/v1543401064/fdaqdrekeouta8s2nldr.jpg";
     }
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getUsername() {
         return username;
@@ -81,15 +82,24 @@ public class ScoreRecord {
         this.ts = ts;
     }
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
     @Override
     public String toString() {
-        return "ScoreRecord{" +
+        return "IndividualScoreRecord{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
                 ", platform=" + platform +
                 ", score=" + score +
-                ", avatar=" + avatar +
+                ", avatar='" + avatar + '\'' +
                 ", ts=" + ts +
                 '}';
     }
+
 }
